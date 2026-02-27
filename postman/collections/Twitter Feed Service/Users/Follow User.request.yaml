@@ -1,0 +1,10 @@
+type: http
+name: Follow User
+order: 9000
+url: "{{baseUrl}}/users/:userId/follow"
+method: POST
+description: Follow a user.
+pathVariables:
+  - key: userId
+    value: ""
+    description: The ID of the user to follow

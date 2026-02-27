@@ -1,0 +1,10 @@
+type: http
+name: Get Feed by User
+order: 3000
+url: "{{baseUrl}}/feed/:userId"
+method: GET
+description: Get feed for a specific user.
+pathVariables:
+  - key: userId
+    value: ""
+    description: The ID of the user whose feed to retrieve

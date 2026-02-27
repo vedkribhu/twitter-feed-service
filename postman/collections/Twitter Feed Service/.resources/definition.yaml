@@ -1,0 +1,9 @@
+name: Twitter Feed Service
+description: >-
+  A comprehensive collection for the Twitter Feed Service API running on
+  Express.js. Covers health checks, feed retrieval, tweet CRUD operations, and
+  user follow/unfollow workflows.
+variables:
+  - key: baseUrl
+    value: "http://localhost:3000"
+    description: Base URL for the Twitter Feed Service

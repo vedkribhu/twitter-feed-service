@@ -1,0 +1,13 @@
+type: http
+name: List Tweets
+order: 4000
+url: "{{baseUrl}}/tweets"
+method: GET
+description: List all tweets with pagination support.
+queryParams:
+  - key: page
+    value: "1"
+    description: Page number
+  - key: limit
+    value: "20"
+    description: Number of items per page

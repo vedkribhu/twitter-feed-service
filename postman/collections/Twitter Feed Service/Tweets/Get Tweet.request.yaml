@@ -1,0 +1,10 @@
+type: http
+name: Get Tweet
+order: 5000
+url: "{{baseUrl}}/tweets/:tweetId"
+method: GET
+description: Get a specific tweet by its ID.
+pathVariables:
+  - key: tweetId
+    value: ""
+    description: The ID of the tweet to retrieve

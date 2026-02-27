@@ -1,0 +1,13 @@
+type: http
+name: Get Feed
+order: 2000
+url: "{{baseUrl}}/feed"
+method: GET
+description: Get the user's Twitter feed with pagination support.
+queryParams:
+  - key: page
+    value: "1"
+    description: Page number
+  - key: limit
+    value: "20"
+    description: Number of items per page

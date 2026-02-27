@@ -1,0 +1,10 @@
+type: http
+name: Delete Tweet
+order: 7000
+url: "{{baseUrl}}/tweets/:tweetId"
+method: DELETE
+description: Delete a tweet by its ID.
+pathVariables:
+  - key: tweetId
+    value: ""
+    description: The ID of the tweet to delete

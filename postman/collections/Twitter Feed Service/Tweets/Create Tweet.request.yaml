@@ -1,0 +1,16 @@
+type: http
+name: Create Tweet
+order: 6000
+url: "{{baseUrl}}/tweets"
+method: POST
+description: Create a new tweet.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "text": "Hello world!",
+      "media_urls": []
+    }

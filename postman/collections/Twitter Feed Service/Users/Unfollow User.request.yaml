@@ -1,0 +1,10 @@
+type: http
+name: Unfollow User
+order: 10000
+url: "{{baseUrl}}/users/:userId/follow"
+method: DELETE
+description: Unfollow a user.
+pathVariables:
+  - key: userId
+    value: ""
+    description: The ID of the user to unfollow

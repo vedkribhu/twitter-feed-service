@@ -1,0 +1,10 @@
+type: http
+name: Get User Profile
+order: 8000
+url: "{{baseUrl}}/users/:userId"
+method: GET
+description: Get a user's profile information.
+pathVariables:
+  - key: userId
+    value: ""
+    description: The ID of the user
