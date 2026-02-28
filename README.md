@@ -2,6 +2,11 @@
 
 ## Main objectives
 Goal: Design feed/:userID endpoint. Evaluate fan out read vs fan out write.
+Completion check list:
+1. Write queries, indexes, seed script
+2. simulate the load
+3. look under the hood of query strategies and joins
+4. pros and cons of each data model and approach to implement the feed
 
 1. Load description
     1. 4.6k tweets per second
@@ -25,6 +30,31 @@ id:
 follower table
 followerId, followeeId
 
+feed table
+userId, feed
+
+
+Thinking process when designing feed
+
+two options: 
+- keep track of what is seen by a user
+
+user 
+- when a tweet is written put it in a feed table with (userId, tweetID, tweetContent, userName)
+
+Cons: 
+the feed table will grow crazy in size -> is that a problem? sharding??
+
+
+Qustion:
+What is my concern? Number of queries? 
+
+
+
+
+
+
+
 
 Tasks:
 create relevant tables
@@ -34,7 +64,7 @@ implement fan out write
 
 
 Goal-> Find 100 new tweets from all users that I follow
-query -> find all users
+query -> find all users 
 
 ## Open questions
 1. strategies you employ to model one-to-one, many-to-one, one-to-many, many-to-many relationships in database

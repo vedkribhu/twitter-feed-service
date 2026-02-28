@@ -1,0 +1,32 @@
+$kind: http-request
+name: Post Tweet
+description: Create a new tweet for a user.
+method: POST
+type: http
+url: "{{baseUrl}}/tweet"
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "user_id": "1",
+      "content": "great work today crew!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 200', () => {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has status string (and optional id)', () => {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('status');
+        pm.expect(json.status).to.be.a('string');
+
+        if (json.id !== undefined) {
+          pm.expect(json.id).to.be.a('number');
+        }
+      });
+    language: text/javascript

@@ -1,10 +1,118 @@
 type: http
 name: Get Feed by User
 order: 3000
+$kind: http-request
 url: "{{baseUrl}}/feed/:userId"
 method: GET
 description: Get feed for a specific user.
 pathVariables:
   - key: userId
-    value: ""
+    value: "2"
     description: The ID of the user whose feed to retrieve
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      const template = `
+      <style>
+        :root { --bg:#ffffff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; --card:#f8fafc; --zebra:#f8fafc; --hover:#f1f5f9; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; color: var(--text); margin: 0; font-size: 13px; line-height: 1.35; }
+        .wrap { padding: 16px; }
+        .header { display:flex; align-items:flex-end; justify-content:space-between; gap: 12px; margin-bottom: 12px; }
+        .title { font-size: 16px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+        .subtitle { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+        .card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .card-hd { padding: 10px 12px; background: var(--card); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 650; }
+        .empty { padding: 14px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); background: #fff; }
+        .pill { display:inline-block; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; color: var(--muted); background: #fff; }
+
+        .tableWrap { max-height: 420px; overflow:auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        thead th { position: sticky; top: 0; z-index: 1; background: #fff; }
+        th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { font-size: 12px; color: var(--muted); font-weight: 650; }
+        tbody tr:nth-child(even) td { background: var(--zebra); }
+        tbody tr:hover td { background: var(--hover); }
+        .content { white-space: pre-wrap; word-break: break-word; }
+      </style>
+
+      <div class="wrap">
+        <div class="header">
+          <div>
+            <p class="title">Get Feed by User</p>
+            <p class="subtitle">{{meta.totalTweets}} tweet{{#unless meta.isSingular}}s{{/unless}} • {{meta.totalUsers}} user{{#unless meta.usersSingular}}s{{/unless}}</p>
+          </div>
+          <span class="pill">{{meta.generatedAt}}</span>
+        </div>
+
+        {{#if meta.isEmpty}}
+          <div class="empty">No tweets yet. Try posting a tweet, then run this request again.</div>
+        {{/if}}
+
+        <div class="card">
+          <div class="card-hd">Tweets</div>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 180px;">User</th>
+                  <th>Content</th>
+                  {{#if meta.showOptional}}
+                    <th style="width: 120px;">ID</th>
+                    <th style="width: 180px;">Created</th>
+                  {{/if}}
+                </tr>
+              </thead>
+              <tbody>
+                {{#each tweets}}
+                  <tr>
+                    <td>{{user_name}}</td>
+                    <td class="content">{{content}}</td>
+                    {{#if ../meta.showOptional}}
+                      <td>{{id}}</td>
+                      <td>{{created_at}}</td>
+                    {{/if}}
+                  </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+
+      function constructVisualizerPayload() {
+        let json;
+        try {
+          json = pm.response.json();
+        } catch (e) {
+          json = { tweets: [] };
+        }
+
+        const rawTweets = Array.isArray(json.tweets) ? json.tweets : [];
+
+        // Normalize for table rendering
+        const tweets = rawTweets.map(t => ({
+          user_name: (t && t.user_name != null) ? String(t.user_name) : 'Unknown',
+          content: (t && t.content != null) ? String(t.content) : '',
+          id: (t && t.id != null) ? String(t.id) : '',
+          created_at: (t && t.created_at != null) ? String(t.created_at) : ''
+        }));
+
+        const totalTweets = tweets.length;
+        const totalUsers = Array.from(new Set(tweets.map(t => t.user_name))).length;
+        const showOptional = tweets.some(t => t.id || t.created_at);
+
+        const meta = {
+          totalTweets,
+          totalUsers,
+          isEmpty: totalTweets === 0,
+          isSingular: totalTweets === 1,
+          usersSingular: totalUsers === 1,
+          showOptional,
+          generatedAt: new Date().toLocaleString()
+        };
+
+        return { tweets, meta };
+      }
+
+      pm.visualizer.set(template, constructVisualizerPayload());
