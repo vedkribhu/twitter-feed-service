@@ -67,3 +67,16 @@ When working on feed
 2. so join is basically saving application code to do three table lookups
 
 Many to many relationship
+
+## Load generation scripts
+One-shot user + follower seeding:
+- `node seed_users_followers.js`
+- Optional env: `USER_COUNT`, `START_USER_ID`, `AVG_FOLLOWERS`, `MAX_FOLLOWERS`,
+  `HEAVY_TAIL_FRACTION`, `SMALL_FOLLOWER_MAX`, `PARETO_ALPHA`, `BATCH_SIZE`,
+  `FAKER_SEED`
+
+Continuous tweet injection (REST API, keep server running):
+- `node app.js`
+- `node inject_tweets.js`
+- Optional env: `USER_COUNT`, `START_USER_ID`, `TWEET_RATE_PER_SEC`,
+  `TWEET_DURATION_SEC` (0 = run forever), `FAKER_SEED`, `API_HOST`, `API_PORT`

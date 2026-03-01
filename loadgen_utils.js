@@ -1,0 +1,285 @@
+"use strict";
+
+const http = require("http");
+const sqlite3 = require("sqlite3").verbose();
+const { faker } = require("@faker-js/faker");
+const { addUser, addFollower } = require("./queries");
+
+const DB_PATH = "./twitter.db";
+const API_HOST = process.env.API_HOST || "127.0.0.1";
+const API_PORT = Number(process.env.API_PORT || 3000);
+
+const DEFAULT_CONFIG = {
+  userCount: 40,
+  startUserId: 1,
+  avgFollowers: 6,
+  maxFollowers: 25,
+  heavyTailFraction: 0.1,
+  smallFollowerMax: 5,
+  paretoAlpha: 1.4,
+  tweetRatePerSec: 3,
+  tweetDurationSec: 10,
+  batchSize: 100,
+  fakerSeed: 1234,
+};
+
+function randomInt(min, maxInclusive) {
+  return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+}
+
+function paretoSample(alpha, xm) {
+  const u = Math.random();
+  return xm / Math.pow(1 - u, 1 / alpha);
+}
+
+function scaleCountsToAvg(counts, targetAvg, maxFollowers) {
+  const currentAvg =
+    counts.reduce((sum, c) => sum + c, 0) / Math.max(1, counts.length);
+  if (currentAvg === 0) {
+    return counts;
+  }
+  const scale = targetAvg / currentAvg;
+  return counts.map((c) => Math.min(maxFollowers, Math.round(c * scale)));
+}
+
+function sampleDistinctIds(pool, count, excludeId) {
+  const available = pool.length - (excludeId ? 1 : 0);
+  if (count <= 0 || available <= 0) {
+    return [];
+  }
+
+  const target = Math.min(count, available);
+  if (target > available / 2) {
+    const copy = pool.filter((id) => id !== excludeId);
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = randomInt(0, i);
+      const temp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+    return copy.slice(0, target);
+  }
+
+  const selected = new Set();
+  while (selected.size < target) {
+    const candidate = pool[randomInt(0, pool.length - 1)];
+    if (candidate === excludeId) {
+      continue;
+    }
+    selected.add(candidate);
+  }
+  return Array.from(selected);
+}
+
+function generateFollowerCounts(userCount, config) {
+  const counts = new Array(userCount).fill(0);
+  const heavyCount = Math.max(1, Math.floor(userCount * config.heavyTailFraction));
+
+  for (let i = 0; i < userCount; i += 1) {
+    const isHeavy = i < heavyCount;
+    if (isHeavy) {
+      const raw = paretoSample(config.paretoAlpha, 1);
+      counts[i] = Math.min(config.maxFollowers, Math.floor(raw));
+    } else {
+      counts[i] = randomInt(0, config.smallFollowerMax);
+    }
+  }
+
+  const scaled = scaleCountsToAvg(counts, config.avgFollowers, config.maxFollowers);
+  for (let i = scaled.length - 1; i > 0; i -= 1) {
+    const j = randomInt(0, i);
+    const temp = scaled[i];
+    scaled[i] = scaled[j];
+    scaled[j] = temp;
+  }
+  return scaled;
+}
+
+function generateFollowerEdges(userIds, config) {
+  const counts = generateFollowerCounts(userIds.length, config);
+  const edges = [];
+
+  for (let i = 0; i < userIds.length; i += 1) {
+    const userId = userIds[i];
+    const count = counts[i];
+    const followers = sampleDistinctIds(userIds, count, userId);
+    followers.forEach((followerId) => {
+      edges.push({ user_id: userId, follower_id: followerId });
+    });
+  }
+
+  return edges;
+}
+
+function buildUsers(count, startId) {
+  const users = [];
+  for (let i = 0; i < count; i += 1) {
+    const id = startId + i;
+    const username = faker.internet.userName().toLowerCase().slice(0, 30);
+    const email = faker.internet.email().toLowerCase();
+    users.push({ id, username, email });
+  }
+  return users;
+}
+
+function openDb() {
+  return new sqlite3.Database(DB_PATH);
+}
+
+function execAsync(db, sql) {
+  return new Promise((resolve, reject) => {
+    db.exec(sql, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function prepareAsync(db, sql) {
+  return new Promise((resolve, reject) => {
+    const stmt = db.prepare(sql, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(stmt);
+    });
+  });
+}
+
+function finalizeAsync(stmt) {
+  return new Promise((resolve, reject) => {
+    stmt.finalize((error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function runAsync(stmt, params) {
+  return new Promise((resolve, reject) => {
+    stmt.run(params, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+async function batchInsert(db, sql, rows, batchSize) {
+  const stmt = await prepareAsync(db, sql);
+  try {
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batch = rows.slice(i, i + batchSize);
+      await execAsync(db, "BEGIN TRANSACTION");
+      for (const row of batch) {
+        await runAsync(stmt, row);
+      }
+      await execAsync(db, "COMMIT");
+    }
+  } catch (error) {
+    await execAsync(db, "ROLLBACK");
+    throw error;
+  } finally {
+    await finalizeAsync(stmt);
+  }
+}
+
+async function injectUsers(db, config) {
+  faker.seed(config.fakerSeed);
+  const users = buildUsers(config.userCount, config.startUserId);
+  const rows = users.map((user) => [user.id, user.username, user.email]);
+  await batchInsert(db, addUser, rows, config.batchSize);
+  return users.map((user) => user.id);
+}
+
+async function injectFollowers(db, userIds, config) {
+  const edges = generateFollowerEdges(userIds, config);
+  const rows = edges.map((edge) => [edge.user_id, edge.follower_id]);
+  await batchInsert(db, addFollower, rows, config.batchSize);
+  return edges.length;
+}
+
+function postJson(path, body) {
+  const payload = JSON.stringify(body);
+  const options = {
+    hostname: API_HOST,
+    port: API_PORT,
+    path,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => {
+        const response = Buffer.concat(chunks).toString("utf8");
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(response);
+          return;
+        }
+        reject(new Error(`HTTP ${res.statusCode}: ${response}`));
+      });
+    });
+    req.on("error", reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+async function simulateTweets(userIds, config) {
+  const totalTweets = config.tweetRatePerSec * config.tweetDurationSec;
+  let sent = 0;
+
+  for (let second = 0; second < config.tweetDurationSec; second += 1) {
+    const tasks = [];
+    for (let i = 0; i < config.tweetRatePerSec; i += 1) {
+      const userId = userIds[randomInt(0, userIds.length - 1)];
+      const content = faker.lorem.sentence();
+      tasks.push(postJson("/tweet", { user_id: userId, content }));
+    }
+    await Promise.all(tasks);
+    sent += tasks.length;
+    if (second < config.tweetDurationSec - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  return { sent, totalTweets };
+}
+
+module.exports = {
+  API_HOST,
+  API_PORT,
+  DB_PATH,
+  DEFAULT_CONFIG,
+  batchInsert,
+  buildUsers,
+  execAsync,
+  generateFollowerCounts,
+  generateFollowerEdges,
+  injectFollowers,
+  injectUsers,
+  openDb,
+  postJson,
+  prepareAsync,
+  finalizeAsync,
+  randomInt,
+  runAsync,
+  sampleDistinctIds,
+  scaleCountsToAvg,
+  simulateTweets,
+};

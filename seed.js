@@ -55,7 +55,7 @@ function createIndexes() {
   });
 }
 
-// createTables();
+createTables();
 createIndexes();
 // insertUsers();
 // injectFollower();
