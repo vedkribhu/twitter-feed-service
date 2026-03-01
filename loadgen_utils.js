@@ -74,25 +74,48 @@ function sampleDistinctIds(pool, count, excludeId) {
 function generateFollowerCounts(userCount, config) {
   const counts = new Array(userCount).fill(0);
   const heavyCount = Math.max(1, Math.floor(userCount * config.heavyTailFraction));
+  const smallCount = Math.max(0, userCount - heavyCount);
 
-  for (let i = 0; i < userCount; i += 1) {
-    const isHeavy = i < heavyCount;
-    if (isHeavy) {
-      const raw = paretoSample(config.paretoAlpha, 1);
-      counts[i] = Math.min(config.maxFollowers, Math.floor(raw));
-    } else {
-      counts[i] = randomInt(0, config.smallFollowerMax);
+  let heavyTotal = 0;
+  for (let i = 0; i < heavyCount; i += 1) {
+    const rank = i + 1;
+    const base = config.maxFollowers / Math.pow(rank, config.paretoAlpha);
+    const noise = paretoSample(config.paretoAlpha, 1);
+    const raw = Math.max(1, Math.floor(base + noise));
+    counts[i] = Math.min(config.maxFollowers, raw);
+    heavyTotal += counts[i];
+  }
+
+  let smallTotal = 0;
+  for (let i = heavyCount; i < userCount; i += 1) {
+    const roll = Math.random();
+    const count = roll < 0.7 ? 0 : randomInt(1, config.smallFollowerMax);
+    counts[i] = count;
+    smallTotal += count;
+  }
+
+  const targetTotal = config.avgFollowers * userCount;
+  const remainingTarget = Math.max(0, targetTotal - heavyTotal);
+  const scale =
+    smallTotal > 0 ? Math.min(remainingTarget / smallTotal, 1) : 0;
+
+  if (scale > 0) {
+    for (let i = heavyCount; i < userCount; i += 1) {
+      counts[i] = Math.min(
+        config.smallFollowerMax,
+        Math.round(counts[i] * scale),
+      );
     }
   }
 
-  const scaled = scaleCountsToAvg(counts, config.avgFollowers, config.maxFollowers);
-  for (let i = scaled.length - 1; i > 0; i -= 1) {
+  for (let i = counts.length - 1; i > 0; i -= 1) {
     const j = randomInt(0, i);
-    const temp = scaled[i];
-    scaled[i] = scaled[j];
-    scaled[j] = temp;
+    const temp = counts[i];
+    counts[i] = counts[j];
+    counts[j] = temp;
   }
-  return scaled;
+
+  return counts;
 }
 
 function generateFollowerEdges(userIds, config) {
