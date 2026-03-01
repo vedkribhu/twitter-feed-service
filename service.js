@@ -3,8 +3,9 @@ const {
   addTweet: addTweetQuery,
   addFeedItem,
   findFollowers,
-  findFeedTweetIds,
-  findTweetById,
+  // findFeedTweetIds,
+  // findTweetById,
+  findFeedTweets,
 } = require("./queries");
 
 const db = new sqlite3.Database("./twitter.db");
@@ -30,6 +31,7 @@ function findAllFollowers(userId) {
         reject(error);
         return;
       }
+
       // Normalize to an array of follower ids.
       resolve((rows || []).map((r) => r.follower_id));
     });
@@ -48,26 +50,34 @@ function addFeedEntry(tweetId, userId) {
   });
 }
 
-function getTweet(tweetId) {
-  return new Promise((resolve, reject) => {
-    db.get(findTweetById, [tweetId], function (error, row) {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve(row);
-    });
-  });
-}
+// function getTweet(tweetId) {
+//   return new Promise((resolve, reject) => {
+//     db.get(findTweetById, [tweetId], function (error, row) {
+//       if (error) {
+//         reject(error);
+//         return;
+//       }
+//       resolve(row);
+//     });
+//   });
+// }
 
 function getFeedTweets(userId) {
   return new Promise((resolve, reject) => {
-    db.all(findFeedTweetIds, [userId], function (error, rows) {
+    db.all(findFeedTweets, [userId], function (error, rows) {
       if (error) {
         reject(error);
         return;
       }
-      resolve((rows || []).map((r) => r.tweet_id));
+      console.log("###", rows);
+
+      resolve(
+        (rows || []).map((row) => ({
+          content: row.content,
+          createdAt: row.created_at,
+          userName: row.username,
+        })),
+      );
     });
   });
 }
@@ -76,6 +86,6 @@ module.exports = {
   addTweet,
   addFeedEntry,
   findAllFollowers,
-  getTweet,
+  // getTweet,
   getFeedTweets,
 };

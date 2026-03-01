@@ -1,0 +1,25 @@
+$kind: http-example
+name: Get Feed by User
+description: Get feed for a specific user.
+request:
+  url: "{{baseUrl}}/feed/:userId"
+  method: GET
+  pathVariables:
+    - key: userId
+      value: "2"
+      description: The ID of the user whose feed to retrieve
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    x-powered-by: Express
+    content-type: application/json; charset=utf-8
+    content-length: "64"
+    etag: W/"40-Z9ump0TQNeAkQkFwbTQjk16Fdxk"
+    date: Sun, 01 Mar 2026 12:06:21 GMT
+    connection: keep-alive
+    keep-alive: timeout=5
+  body:
+    type: json
+    content: '[{"content":"great work today crew!","userName":"mike shinoda"}]'
+order: 1300778348740569

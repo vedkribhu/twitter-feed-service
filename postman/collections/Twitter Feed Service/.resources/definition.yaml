@@ -1,4 +1,4 @@
-$kind: collection-definition
+$kind: collection
 name: Twitter Feed Service
 variables:
-  baseUrl: ""
+  baseUrl: localhost:3000

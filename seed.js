@@ -7,6 +7,7 @@ const {
   addFollower,
   addTweet,
   createFeedTable,
+  createIndexes: createIndexesQuries,
 } = require("./queries");
 
 const db = new sqlite3.Database("./twitter.db");
@@ -44,9 +45,21 @@ function injectTweet() {
   db.run(addTweet, [1, 1, "Nice concert today. Good work crew!"]);
 }
 
-createTables();
-insertUsers();
-injectFollower();
+function createIndexes() {
+  db.serialize(() => {
+    const allIndexes = createIndexesQuries;
+    console.log("### all indexes", allIndexes);
+    allIndexes.map((query) => {
+      db.run(query);
+    });
+  });
+}
+
+// createTables();
+createIndexes();
+// insertUsers();
+// injectFollower();
+
 // injectTweet();
 
 db.close();

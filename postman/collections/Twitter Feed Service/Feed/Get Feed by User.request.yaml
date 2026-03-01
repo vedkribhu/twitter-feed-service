@@ -116,3 +116,54 @@ scripts:
       }
 
       pm.visualizer.set(template, constructVisualizerPayload());
+
+      // -----------------------------
+      // Tests
+      // -----------------------------
+
+      pm.test('Status code is 200', function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is JSON', function () {
+        pm.response.to.be.json;
+      });
+
+      let body;
+      pm.test('Response body can be parsed as JSON', function () {
+        body = pm.response.json();
+        pm.expect(body).to.not.equal(undefined);
+      });
+
+      pm.test('Response body is an array of tweets', function () {
+        pm.expect(body).to.be.an('array');
+      });
+
+      pm.test('Empty array is allowed', function () {
+        pm.expect(body.length).to.be.at.least(0);
+      });
+
+      pm.test('Each tweet item has required fields with correct types', function () {
+        body.forEach((tweet, idx) => {
+          pm.expect(tweet, `tweet[${idx}]`).to.be.an('object');
+
+          // required
+          pm.expect(tweet).to.have.property('content');
+          pm.expect(tweet.content, `tweet[${idx}].content`).to.be.a('string');
+          pm.expect(tweet.content.trim().length, `tweet[${idx}].content not empty`).to.be.greaterThan(0);
+
+          pm.expect(tweet).to.have.property('userName');
+          pm.expect(tweet.userName, `tweet[${idx}].userName`).to.be.a('string');
+          pm.expect(tweet.userName.trim().length, `tweet[${idx}].userName not empty`).to.be.greaterThan(0);
+
+          // optional
+          if (Object.prototype.hasOwnProperty.call(tweet, 'createdAt') && tweet.createdAt !== null) {
+            pm.expect(tweet.createdAt, `tweet[${idx}].createdAt`).to.be.a('string');
+          }
+
+          if (Object.prototype.hasOwnProperty.call(tweet, 'id') && tweet.id !== null) {
+            pm.expect(['string', 'number'], `tweet[${idx}].id type`).to.include(typeof tweet.id);
+          }
+        });
+      });
+examples: ./.resources/Get Feed by User.resources/examples

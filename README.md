@@ -17,59 +17,53 @@ Focus on writing the sql queries, designing database yourself. You can use ai to
 
 ## Databse Model
 
-tweet table
-id:
-content:
-user:
+tweets table
+id:int
+content: string
+user_id:int (FK)
+created_at
 
+users table
+id: int
+username: string
+email: string
+created_at
 
-user table
-id: 
+feed
+user_id: int
+tweet_id: int
+PK: user_id, tweet_id
+FK: user_id,
+FK: tweet_id
 
+followers
+user_id: int
+follower_id: int
+PK: follower_id, user_id
+FK: follower_id
+FK: user_id
 
-follower table
-followerId, followeeId
+### Indexes
+tweets table
+  1. user_id
+
+follower table: 
+  1. user_id, 
+  2. follower_id
 
 feed table
-userId, feed
-
-
-Thinking process when designing feed
-
-two options: 
-- keep track of what is seen by a user
-
-user 
-- when a tweet is written put it in a feed table with (userId, tweetID, tweetContent, userName)
-
-Cons: 
-the feed table will grow crazy in size -> is that a problem? sharding??
-
-
-Qustion:
-What is my concern? Number of queries? 
-
-
-
-
-
-
-
-
-Tasks:
-create relevant tables
-simulate this load -> an endpoint to post a tweet, an endpoint to get the feed
-implement fan out read
-implement fan out write
-
-
-Goal-> Find 100 new tweets from all users that I follow
-query -> find all users 
+  1. user_id
+  2. tweets_id
+  
 
 ## Open questions
 1. strategies you employ to model one-to-one, many-to-one, one-to-many, many-to-many relationships in database
 2. is normalization always the best approach? -> fractional indexing?
 3. why is relational database model so powerful? Is the model all about trying to get to normalized databse model?
 
+
+When working on feed
+1. should i run a cleanup job on feed table
+2. so join is basically saving application code to do three table lookups
 
 Many to many relationship

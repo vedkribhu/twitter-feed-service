@@ -1,0 +1,21 @@
+$kind: http-example
+name: Get Feed by User
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: json
+    content: |-
+      {
+        "tweets": [
+          {
+            "content": "Hi there",
+            "username": "Mike Shinonda",
+            "createdAt": "22293232"
+          }
+        ]
+      }
+order: 1772365264376

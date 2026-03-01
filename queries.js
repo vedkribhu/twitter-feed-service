@@ -39,6 +39,28 @@ const createFeedTable = `
     )
   `;
 
+// tweets table
+//   1. user_id
+
+// follower table:
+//   1. user_id,
+//   2. follower_id
+
+// feed table
+//   1. user_id
+//   2. tweets_id
+
+const createIndexes = [
+  // tweets table
+  `create index if not EXISTS tweets_user on tweets (user_id)`,
+  // follower table
+  `create index if not EXISTS follower_user on followers (user_id)`,
+  `create index if not EXISTS follower_follower on followers (follower_id)`,
+  // feed table
+  `create index if not EXISTS feed_user on feed (user_id)`,
+  `create index if not EXISTS feed_tweet on feed (tweet_id)`,
+];
+
 const addUser = `
   insert into users (id, username, email) values (?, ?, ?)
 `;
@@ -59,20 +81,18 @@ const findFollowers = `
   select follower_id from followers where user_id = ?
   `;
 
-const findFeedTweetIds = `
-  select tweet_id from feed where user_id = ? order by created_at desc
-  `;
-
-const findTweetById = `
-  select content from tweets where user_id = ?
-  
+const findFeedTweets = `
+    select tweets.content, users.username, tweets.created_at from feed
+    inner join tweets on tweets.id = feed.tweet_id
+    inner join users on tweets.user_id = users.id
+    where feed.user_id = ?
   `;
 
 module.exports = {
   createUserTable,
   findFollowers,
-  findFeedTweetIds,
-  findTweetById,
+  findFeedTweets,
+  // findTweetById,
   createFollowerTable,
   createTweetsTable,
   createFeedTable,
@@ -80,4 +100,5 @@ module.exports = {
   addFollower,
   addTweet,
   addFeedItem,
+  createIndexes,
 };

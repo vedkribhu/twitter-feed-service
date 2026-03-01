@@ -1,6 +1,12 @@
 "use strict";
 var express_1 = require("express");
-const { addTweet, addFeedEntry, findAllFollowers, getTweet, getFeedTweets } = require("./service");
+const {
+  addTweet,
+  addFeedEntry,
+  findAllFollowers,
+  getTweet,
+  getFeedTweets,
+} = require("./service");
 var app = express_1();
 app.use(express_1.json());
 
@@ -12,7 +18,7 @@ async function injectFeed(userId, tweetId) {
   const followers = (await findAllFollowers(userId)) || [];
   // Ensure we don't crash when a user has no followers, and wait for inserts.
   await Promise.all(
-    followers.map((followerId) => addFeedEntry(tweetId, followerId))
+    followers.map((followerId) => addFeedEntry(tweetId, followerId)),
   );
 }
 
@@ -29,19 +35,9 @@ app.post("/tweet", async function (req, res) {
 app.get("/feed/:userId", async function (req, res) {
   try {
     var userId = req.params.userId;
-    const tweetIds = await getFeedTweets(userId);
+    const feed = await getFeedTweets(userId);
 
-    const tweets = await Promise.all(tweetIds.map((tweetId) => getTweet(tweetId)));
-
-    res.json({
-      tweets: (tweets || [])
-        .filter(Boolean)
-        .map((tweet) => ({
-          content: t.content,
-          user_name: t.user_name,
-          created_at: t.created_at,
-        })),
-    });
+    res.json(feed);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
