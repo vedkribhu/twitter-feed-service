@@ -1,0 +1,350 @@
+NRQL help:
+
+Sample query:
+
+SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'Web' FROM Metric WHERE (entity.guid = 'MjY2NTkxOHxBUE18QVBQTElDQVRJT058MTU3MDYyNjk4NQ') AND (transactionType = 'Web') LIMIT 5 SINCE 30 minutes ago TIMESERIES facet concat(transactionType) UNTIL now
+SELECT rate(count(apm.service.transaction.duration), 1 minute) FROM Metric WHERE (entity.guid = 'MjY2NTkxOHxBUE18QVBQTElDQVRJT058MTU3MDYyNjk4NQ') AND (transactionName = 'WebTransaction/Custom/POST /chat') FACET `transactionName` LIMIT MAX SINCE 30 minutes ago TIMESERIES UNTIL now
+
+
+Keyset output:
+[
+  {
+    "results": [
+      {
+        "stringKeys": [
+          "agent.entity.guid",
+          "agent.language",
+          "agent.version",
+          "appName",
+          "datastoreType",
+          "db.operation",
+          "db.sql.table",
+          "db.system",
+          "description",
+          "entity.guid",
+          "entity.name",
+          "entityGuid",
+          "error.group.guid",
+          "error.group.issueType",
+          "error.group.message",
+          "error.group.name",
+          "error.group.nrql",
+          "error.group.source",
+          "external.host",
+          "externalAccountId",
+          "externalAppId",
+          "externalTransaction",
+          "frontendRoute",
+          "group",
+          "heapType",
+          "host",
+          "host.bootId",
+          "host.displayName",
+          "host.name",
+          "instanceName",
+          "jvm.thread.name",
+          "jvm.thread.state",
+          "k8s.clusterName",
+          "k8s.containerName",
+          "k8s.deploymentName",
+          "k8s.namespaceName",
+          "k8s.nodeName",
+          "k8s.podName",
+          "keyTransactionName",
+          "language",
+          "licenseKey",
+          "messaging.destination.name",
+          "messaging.destination.type",
+          "messaging.system",
+          "metricName",
+          "metricTimesliceName",
+          "name",
+          "newrelic.source",
+          "operation",
+          "path",
+          "segmentName",
+          "segmentType",
+          "server.address",
+          "server.port",
+          "severity",
+          "subtype",
+          "table",
+          "tags.Domain",
+          "tags.Group",
+          "tags.account",
+          "tags.accountId",
+          "tags.environment",
+          "tags.group",
+          "tags.trustedAccountId",
+          "time.type",
+          "transactionName",
+          "transactionType",
+          "unit",
+          "usageType",
+          "valueFunction"
+        ],
+        "numericKeys": [
+          "appId",
+          "endTimestamp",
+          "error.expected",
+          "realAgentId",
+          "timestamp"
+        ],
+        "booleanKeys": [
+          "error.expected"
+        ],
+        "summaryKeys": [
+          "apm.key.transaction.apdex",
+          "apm.key.transaction.duration",
+          "apm.key.transaction.error.count",
+          "apm.key.transaction.overview",
+          "apm.service.apdex",
+          "apm.service.apdex.user",
+          "apm.service.cpu.usertime",
+          "apm.service.cpu.usertime.utilization",
+          "apm.service.datastore.duration",
+          "apm.service.datastore.operation.duration",
+          "apm.service.datastore.total.duration",
+          "apm.service.error.count",
+          "apm.service.external.duration",
+          "apm.service.external.host.duration",
+          "apm.service.external.total.duration",
+          "apm.service.external.transaction.duration",
+          "apm.service.instance.count",
+          "apm.service.java.memory.pool",
+          "apm.service.jvm.thread.count",
+          "apm.service.jvm.thread.cpu.time",
+          "apm.service.jvm.thread.cpu.total.time",
+          "apm.service.logging.lines",
+          "apm.service.memory.heap.committed",
+          "apm.service.memory.heap.max",
+          "apm.service.memory.heap.used",
+          "apm.service.memory.physical",
+          "apm.service.memory.workingset",
+          "apm.service.messaging.publish.duration",
+          "apm.service.messaging.receive.duration",
+          "apm.service.metrics.reported",
+          "apm.service.overview.other",
+          "apm.service.overview.web",
+          "apm.service.request.queuing",
+          "apm.service.transaction.apdex",
+          "apm.service.transaction.duration",
+          "apm.service.transaction.error.count",
+          "apm.service.transaction.external.duration",
+          "apm.service.transaction.other.datastore.duration",
+          "apm.service.transaction.other.external.duration",
+          "apm.service.transaction.overview",
+          "apm.service.transaction.web.datastore.duration",
+          "apm.service.transaction.web.external.duration",
+          "apm.service.user",
+          "newrelic.goldenmetrics.apm.application.errorCount",
+          "newrelic.goldenmetrics.apm.application.errorRate",
+          "newrelic.goldenmetrics.apm.application.httpResponseTimeMsMetric",
+          "newrelic.goldenmetrics.apm.application.responseTimeMs",
+          "newrelic.goldenmetrics.apm.application.throughput",
+          "newrelic.goldenmetrics.ext.rf_scanner.errors",
+          "newrelic.timeslice.value"
+        ],
+        "uniqueCountKeys": [
+          "newrelic.error.group.userImpact"
+        ],
+        "countKeys": [
+          "newrelic.error.group.occurrences"
+        ],
+        "allKeys": [
+          "agent.entity.guid",
+          "agent.language",
+          "agent.version",
+          "apm.key.transaction.apdex",
+          "apm.key.transaction.duration",
+          "apm.key.transaction.error.count",
+          "apm.key.transaction.overview",
+          "apm.service.apdex",
+          "apm.service.apdex.user",
+          "apm.service.cpu.usertime",
+          "apm.service.cpu.usertime.utilization",
+          "apm.service.datastore.duration",
+          "apm.service.datastore.operation.duration",
+          "apm.service.datastore.total.duration",
+          "apm.service.error.count",
+          "apm.service.external.duration",
+          "apm.service.external.host.duration",
+          "apm.service.external.total.duration",
+          "apm.service.external.transaction.duration",
+          "apm.service.instance.count",
+          "apm.service.java.memory.pool",
+          "apm.service.jvm.thread.count",
+          "apm.service.jvm.thread.cpu.time",
+          "apm.service.jvm.thread.cpu.total.time",
+          "apm.service.logging.lines",
+          "apm.service.memory.heap.committed",
+          "apm.service.memory.heap.max",
+          "apm.service.memory.heap.used",
+          "apm.service.memory.physical",
+          "apm.service.memory.workingset",
+          "apm.service.messaging.publish.duration",
+          "apm.service.messaging.receive.duration",
+          "apm.service.metrics.reported",
+          "apm.service.overview.other",
+          "apm.service.overview.web",
+          "apm.service.request.queuing",
+          "apm.service.transaction.apdex",
+          "apm.service.transaction.duration",
+          "apm.service.transaction.error.count",
+          "apm.service.transaction.external.duration",
+          "apm.service.transaction.other.datastore.duration",
+          "apm.service.transaction.other.external.duration",
+          "apm.service.transaction.overview",
+          "apm.service.transaction.web.datastore.duration",
+          "apm.service.transaction.web.external.duration",
+          "apm.service.user",
+          "appId",
+          "appName",
+          "datastoreType",
+          "db.operation",
+          "db.sql.table",
+          "db.system",
+          "description",
+          "endTimestamp",
+          "entity.guid",
+          "entity.name",
+          "entityGuid",
+          "error.expected",
+          "error.group.guid",
+          "error.group.issueType",
+          "error.group.message",
+          "error.group.name",
+          "error.group.nrql",
+          "error.group.source",
+          "external.host",
+          "externalAccountId",
+          "externalAppId",
+          "externalTransaction",
+          "frontendRoute",
+          "group",
+          "heapType",
+          "host",
+          "host.bootId",
+          "host.displayName",
+          "host.name",
+          "instanceName",
+          "jvm.thread.name",
+          "jvm.thread.state",
+          "k8s.clusterName",
+          "k8s.containerName",
+          "k8s.deploymentName",
+          "k8s.namespaceName",
+          "k8s.nodeName",
+          "k8s.podName",
+          "keyTransactionName",
+          "language",
+          "licenseKey",
+          "messaging.destination.name",
+          "messaging.destination.type",
+          "messaging.system",
+          "metricName",
+          "metricTimesliceName",
+          "name",
+          "newrelic.error.group.occurrences",
+          "newrelic.error.group.userImpact",
+          "newrelic.goldenmetrics.apm.application.errorCount",
+          "newrelic.goldenmetrics.apm.application.errorRate",
+          "newrelic.goldenmetrics.apm.application.httpResponseTimeMsMetric",
+          "newrelic.goldenmetrics.apm.application.responseTimeMs",
+          "newrelic.goldenmetrics.apm.application.throughput",
+          "newrelic.goldenmetrics.ext.rf_scanner.errors",
+          "newrelic.source",
+          "newrelic.timeslice.value",
+          "operation",
+          "path",
+          "realAgentId",
+          "segmentName",
+          "segmentType",
+          "server.address",
+          "server.port",
+          "severity",
+          "subtype",
+          "table",
+          "tags.Domain",
+          "tags.Group",
+          "tags.account",
+          "tags.accountId",
+          "tags.environment",
+          "tags.group",
+          "tags.trustedAccountId",
+          "time.type",
+          "timestamp",
+          "transactionName",
+          "transactionType",
+          "unit",
+          "usageType",
+          "valueFunction"
+        ]
+      }
+    ],
+    "metadata": {
+      "contents": [
+        {
+          "function": "keyset"
+        }
+      ],
+      "eventTypes": [
+        "Metric"
+      ],
+      "eventType": "Metric",
+      "openEnded": true,
+      "messages": [
+        "Your Metric query has been transformed into a query that is compatible with the previous Infrastructure metric format."
+      ],
+      "beginTimeMillis": 1772620907653,
+      "endTimeMillis": 1772622707653,
+      "beginTime": "2026-03-04T10:41:47Z",
+      "endTime": "2026-03-04T11:11:47Z",
+      "guid": "5c0bdc11-a88b-685b-5d45-3cdbfce6d135",
+      "routerGuid": "5c0bdc11-a88b-685b-5d45-3cdbfce6d135",
+      "rawSince": "30 MINUTES AGO",
+      "rawUntil": "NOW",
+      "rawCompareWith": "",
+      "facetExpression": "`cases`(WHERE ((`eventtype`() = 'Metric') AND (`entity`.`guid` = 'MjY2NTkxOHxBUE18QVBQTElDQVRJT058MTU3MDYyNjk4NQ')) AS `unmapped`)",
+      "infoMessages": [
+        "Your Metric query has been transformed into a query that is compatible with the previous Infrastructure metric format."
+      ],
+      "timeAggregations": [
+        "raw metrics"
+      ],
+      "accounts": [
+        2665918
+      ]
+    },
+    "performanceStats": {
+      "inspectedCount": 39054667,
+      "exceedsRetentionWindow": false,
+      "responseTime": 1950
+    },
+    "queryUsageRaw": {
+      "scannedEvents": 31247226,
+      "ccu": 0.025810208676,
+      "billableMetric": "ccu"
+    }
+  }
+]
+
+
+All the endpoints this service powers:
+WebTransaction/Custom/POST /process-client-tools
+2.51 M
+WebTransaction/Custom/GET /config
+545 k
+WebTransaction/Custom/POST /ai-actions
+355 k
+WebTransaction/Custom/POST /list-context-suggestions
+256 k
+WebTransaction/Custom/GET /knockknock
+191 k
+WebTransaction/Custom/POST /chat
+171 k
+WebTransaction/Custom/GET /ai/postbot/agentv2/config
+88.3 k
+WebTransaction/Custom/GET /conversation
+18 k
+WebTransaction/Custom/GET /team-settings

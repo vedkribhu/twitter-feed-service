@@ -1,11 +1,10 @@
 "use strict";
 
 const http = require("http");
-const sqlite3 = require("sqlite3").verbose();
 const { faker } = require("@faker-js/faker");
 const { addUser, addFollower } = require("./queries");
+const { pool } = require("./db");
 
-const DB_PATH = "./twitter.db";
 const API_HOST = process.env.API_HOST || "127.0.0.1";
 const API_PORT = Number(process.env.API_PORT || 3000);
 
@@ -146,82 +145,63 @@ function buildUsers(count, startId) {
 }
 
 function openDb() {
-  return new sqlite3.Database(DB_PATH);
+  return pool;
 }
 
-function execAsync(db, sql) {
-  return new Promise((resolve, reject) => {
-    db.exec(sql, (error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
+function execAsync(db, sql, params = []) {
+  return db.query(sql, params);
 }
 
-function prepareAsync(db, sql) {
-  return new Promise((resolve, reject) => {
-    const stmt = db.prepare(sql, (error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve(stmt);
-    });
-  });
+function prepareAsync(_db, sql) {
+  return Promise.resolve(sql);
 }
 
-function finalizeAsync(stmt) {
-  return new Promise((resolve, reject) => {
-    stmt.finalize((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
+function finalizeAsync() {
+  return Promise.resolve();
 }
 
-function runAsync(stmt, params) {
-  return new Promise((resolve, reject) => {
-    stmt.run(params, (error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
+function runAsync(db, sql, params) {
+  return db.query(sql, params);
 }
 
 async function batchInsert(db, sql, rows, batchSize) {
-  const stmt = await prepareAsync(db, sql);
+  const client = await db.connect();
   try {
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
-      await execAsync(db, "BEGIN TRANSACTION");
+      await client.query("BEGIN");
       for (const row of batch) {
-        await runAsync(stmt, row);
+        await client.query(sql, row);
       }
-      await execAsync(db, "COMMIT");
+      await client.query("COMMIT");
     }
   } catch (error) {
-    await execAsync(db, "ROLLBACK");
+    await client.query("ROLLBACK");
     throw error;
   } finally {
-    await finalizeAsync(stmt);
+    client.release();
   }
 }
 
 async function injectUsers(db, config) {
   faker.seed(config.fakerSeed);
   const users = buildUsers(config.userCount, config.startUserId);
-  const rows = users.map((user) => [user.id, user.username, user.email]);
-  await batchInsert(db, addUser, rows, config.batchSize);
-  return users.map((user) => user.id);
+  const insertedIds = [];
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+    for (const user of users) {
+      const result = await client.query(addUser, [user.username, user.email]);
+      insertedIds.push(result.rows[0].id);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+  return insertedIds;
 }
 
 async function injectFollowers(db, userIds, config) {
@@ -287,7 +267,6 @@ async function simulateTweets(userIds, config) {
 module.exports = {
   API_HOST,
   API_PORT,
-  DB_PATH,
   DEFAULT_CONFIG,
   batchInsert,
   buildUsers,

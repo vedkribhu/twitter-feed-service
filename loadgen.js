@@ -11,14 +11,13 @@ const {
 async function run() {
   const config = { ...DEFAULT_CONFIG };
   const db = openDb();
-  db.run("PRAGMA foreign_keys = ON");
 
   try {
     const userIds = await injectUsers(db, config);
     await injectFollowers(db, userIds, config);
     await simulateTweets(userIds, config);
   } finally {
-    db.close();
+    await db.end();
   }
 }
 

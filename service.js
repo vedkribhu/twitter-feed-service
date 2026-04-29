@@ -1,53 +1,32 @@
-const sqlite3 = require("sqlite3").verbose();
 const {
   addTweet: addTweetQuery,
   addFeedItem,
   findFollowers,
+  findFollowing,
   // findFeedTweetIds,
   // findTweetById,
   findFeedTweets,
 } = require("./queries");
-
-const db = new sqlite3.Database("./twitter.db");
-db.run("PRAGMA foreign_keys = ON");
+const { pool } = require("./db");
 
 async function addTweet(userId, tweetContent) {
-  return new Promise((resolve, reject) => {
-    db.run(addTweetQuery, [null, userId, tweetContent], function (error) {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve({ status: "ok", id: this.lastID });
-    });
-  });
+  const result = await pool.query(addTweetQuery, [userId, tweetContent]);
+  return { status: "ok", id: result.rows[0].id };
 }
 
-function findAllFollowers(userId) {
-  return new Promise((resolve, reject) => {
-    // SELECT queries must use `db.all` (or `db.get`). `db.run` doesn't return rows.
-    db.all(findFollowers, [userId], function (error, rows) {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      // Normalize to an array of follower ids.
-      resolve((rows || []).map((r) => r.follower_id));
-    });
-  });
+async function findAllFollowers(userId) {
+  const result = await pool.query(findFollowers, [userId]);
+  return result.rows.map((r) => r.follower_id);
 }
 
-function addFeedEntry(tweetId, userId) {
-  return new Promise((resolve, reject) => {
-    db.run(addFeedItem, [userId, tweetId], function (error) {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve({ userId: userId, tweetId: tweetId });
-    });
-  });
+async function findAllFollowing(userId) {
+  const result = await pool.query(findFollowing, [userId]);
+  return result.rows.map((r) => r.user_id);
+}
+
+async function addFeedEntry(tweetId, userId) {
+  await pool.query(addFeedItem, [userId, tweetId]);
+  return { userId: userId, tweetId: tweetId };
 }
 
 // function getTweet(tweetId) {
@@ -62,30 +41,20 @@ function addFeedEntry(tweetId, userId) {
 //   });
 // }
 
-function getFeedTweets(userId) {
-  return new Promise((resolve, reject) => {
-    db.all(findFeedTweets, [userId], function (error, rows) {
-      if (error) {
-        reject(error);
-        return;
-      }
-      console.log("###", rows);
-
-      resolve(
-        (rows || []).map((row) => ({
-          content: row.content,
-          createdAt: row.created_at,
-          userName: row.username,
-        })),
-      );
-    });
-  });
+async function getFeedTweets(userId) {
+  const result = await pool.query(findFeedTweets, [userId]);
+  return result.rows.map((row) => ({
+    content: row.content,
+    createdAt: row.created_at,
+    userName: row.username,
+  }));
 }
 
 module.exports = {
   addTweet,
   addFeedEntry,
   findAllFollowers,
+  findAllFollowing,
   // getTweet,
   getFeedTweets,
 };

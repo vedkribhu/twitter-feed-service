@@ -1,18 +1,11 @@
 $kind: http-request
-name: Post Tweet
-description: Create a new tweet for a user.
-method: POST
-type: http
 url: "{{baseUrl}}/tweet"
+method: POST
 headers:
   Content-Type: application/json
 body:
   type: json
-  content: |-
-    {
-      "user_id": "1",
-      "content": "great work today crew!"
-    }
+  content: ""
 scripts:
   - type: afterResponse
     code: |-
@@ -30,3 +23,4 @@ scripts:
         }
       });
     language: text/javascript
+order: 1000

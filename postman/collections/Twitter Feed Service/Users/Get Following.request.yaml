@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}:/users/:userId/following"
+method: GET
+pathVariables:
+  - key: userId
+    value: "2"
+    description: The ID of the user whose following list you want
+order: 1000

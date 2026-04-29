@@ -1,7 +1,6 @@
 $kind: http-example
-name: Get Feed by User
 request:
-  url: ""
+  url: http://
   method: GET
 response:
   statusCode: 200
@@ -18,4 +17,4 @@ response:
           }
         ]
       }
-order: 1772365264376
+order: 1000

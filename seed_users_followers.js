@@ -39,7 +39,6 @@ function buildConfigFromEnv() {
 async function run() {
   const config = buildConfigFromEnv();
   const db = openDb();
-  db.run("PRAGMA foreign_keys = ON");
 
   try {
     const userIds = await injectUsers(db, config);
@@ -48,7 +47,7 @@ async function run() {
       `Seeded ${userIds.length} users and ${edgeCount} follower edges.`,
     );
   } finally {
-    db.close();
+    await db.end();
   }
 }
 

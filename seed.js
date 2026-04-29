@@ -1,4 +1,3 @@
-const sqlite3 = require("sqlite3").verbose();
 const {
   createFollowerTable,
   createTweetsTable,
@@ -7,59 +6,58 @@ const {
   addFollower,
   addTweet,
   createFeedTable,
-  createIndexes: createIndexesQuries,
+  createIndexes: createIndexesQueries,
 } = require("./queries");
+const { pool } = require("./db");
 
-const db = new sqlite3.Database("./twitter.db");
-function createTables() {
-  db.serialize(() => {
-    db.run("PRAGMA foreign_keys = ON");
-    db.run(createUserTable);
-    db.run(createFollowerTable);
-    db.run(createTweetsTable);
-    db.run(createFeedTable);
-    // const stmt = db.prepare("INSERT INTO lorem VALUES (?)");
-
-    // for (let i = 0; i < 10; i++) {
-    //   stmt.run(`Ipsum ${i}`);
-    // }
-
-    // stmt.finalize();
-
-    // db.each("SELECT rowid AS id, info FROM lorem", (err, row) => {
-    //   console.log(`${row.id}: ${row.info}`);
-    // });
-  });
+async function createTables() {
+  await pool.query(createUserTable);
+  await pool.query(createFollowerTable);
+  await pool.query(createTweetsTable);
+  await pool.query(createFeedTable);
 }
 
-function insertUsers() {
-  db.run(addUser, [1, "mike shinoda", "mik.s@gmail.com"]);
-  db.run(addUser, [2, "vedant", "vedanta.b@gmail.com"]);
+async function insertUsers() {
+  const userOne = await pool.query(addUser, ["mike shinoda", "mik.s@gmail.com"]);
+  const userTwo = await pool.query(addUser, ["vedant", "vedanta.b@gmail.com"]);
+  return [userOne.rows[0].id, userTwo.rows[0].id];
 }
 
-function injectFollower() {
-  db.run(addFollower, [1, 2]);
+async function injectFollower(userId, followerId) {
+  await pool.query(addFollower, [userId, followerId]);
 }
 
-function injectTweet() {
-  db.run(addTweet, [1, 1, "Nice concert today. Good work crew!"]);
+async function injectTweet(userId) {
+  await pool.query(addTweet, [userId, "Nice concert today. Good work crew!"]);
 }
 
-function createIndexes() {
-  db.serialize(() => {
-    const allIndexes = createIndexesQuries;
-    console.log("### all indexes", allIndexes);
-    allIndexes.map((query) => {
-      db.run(query);
-    });
-  });
+async function createIndexes() {
+  for (const query of createIndexesQueries) {
+    await pool.query(query);
+  }
 }
 
-createTables();
-createIndexes();
-// insertUsers();
-// injectFollower();
+async function run() {
+  try {
+    await pool.query("BEGIN");
+    await createTables();
+    await createIndexes();
 
-// injectTweet();
+    // Uncomment to insert sample records.
+    // const [userOneId, userTwoId] = await insertUsers();
+    // await injectFollower(userOneId, userTwoId);
+    // await injectTweet(userOneId);
 
-db.close();
+    await pool.query("COMMIT");
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    throw error;
+  } finally {
+    await pool.end();
+  }
+}
+
+run().catch((error) => {
+  console.error("Seeding failed:", error);
+  process.exit(1);
+});
